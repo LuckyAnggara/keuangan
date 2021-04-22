@@ -25,6 +25,7 @@ Route::group(['prefix' => 'jurnal'], function () {
     Route::post('/store', 'JurnalController@store');
     //GET
     Route::get('/', 'JurnalController@index');
+    Route::get('/reqnomorjurnal', 'JurnalController@nomorJurnal');
     // Route::get('/{id}', 'PersediaanController@show');
     //DESTROY
     // Route::delete('/{id}', 'BarangController@destroy');
