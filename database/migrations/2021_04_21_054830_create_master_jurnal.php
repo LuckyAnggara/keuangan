@@ -18,7 +18,6 @@ class CreateMasterJurnal extends Migration
             $table->string('reff');
             $table->string('master_akun_id');
             $table->double('nominal');
-            $table->double('saldo');
             $table->enum('jenis', ['DEBIT','KREDIT']);
             $table->timestamps();
             $table->softDeletes();

@@ -19,12 +19,23 @@ Route::middleware('auth:api')->get('/user', function (Request $request) {
 });
 
 
-// Persediaan
+// JURNAL
 Route::group(['prefix' => 'jurnal'], function () {
     //POST
     Route::post('/store', 'JurnalController@store');
     //GET
     Route::get('/', 'JurnalController@index');
+    // Route::get('/{id}', 'PersediaanController@show');
+    //DESTROY
+    // Route::delete('/{id}', 'BarangController@destroy');
+});
+
+// AKUN
+Route::group(['prefix' => 'akun'], function () {
+    //POST
+    Route::post('/store', 'AkunController@store');
+    //GET
+    Route::get('/', 'AkunController@index');
     // Route::get('/{id}', 'PersediaanController@show');
     //DESTROY
     // Route::delete('/{id}', 'BarangController@destroy');
