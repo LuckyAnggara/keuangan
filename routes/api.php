@@ -26,11 +26,14 @@ Route::group(['prefix' => 'jurnal'], function () {
     //GET
     Route::get('/', 'JurnalController@index');
     Route::get('/reqnomorjurnal', 'JurnalController@nomorJurnal');
-    // Route::get('/{id}', 'PersediaanController@show');
-    //DESTROY
-    // Route::delete('/{id}', 'BarangController@destroy');
+
 });
 
+// LEDGER
+Route::group(['prefix' => 'ledger'], function () {
+    //GET
+    Route::get('/{id}/{dd}/{ddd}', 'LedgerController@detail');
+});
 // AKUN
 Route::group(['prefix' => 'akun'], function () {
     //POST
