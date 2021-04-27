@@ -23,6 +23,7 @@ class AkunController extends Controller
             ->where('deleted_at')
             ->where('header','=',0)
             ->where('jenis_akun_id','=',$value->id)    
+            ->orderBy('kode_akun','ASC')
             ->get();
 
             foreach ($subheader as $key => $sub) {
