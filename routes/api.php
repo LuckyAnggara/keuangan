@@ -23,6 +23,7 @@ Route::middleware('auth:api')->get('/user', function (Request $request) {
 Route::group(['prefix' => 'jurnal'], function () {
     //POST
     Route::post('/store', 'JurnalController@store');
+    Route::post('/storebatch', 'JurnalController@storeBatch');
     //GET
     Route::get('/{dd}/{ddd}', 'JurnalController@index');
     Route::get('/reqnomorjurnal', 'JurnalController@nomorJurnal');

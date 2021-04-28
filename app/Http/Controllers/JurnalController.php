@@ -26,15 +26,60 @@ class JurnalController extends Controller
     }
 
     public function store(Request $request){
-        $data = Jurnal::create([
-            'reff'=>$request['reff'],
-            'nomor_jurnal'=>$request['nomor_jurnal'],
-            'master_akun_id'=>$request['master_akun_id'],
-            'nominal'=>$request['nominal'],
-            'jenis'=>$request['jenis'],
-            'keterangan'=>$request['keterangan'],
-        ]);
-        return response()->json($data, 200);
+
+        if($request->jurnal){  // UNTUK BATCH
+            $output = [];
+            $nomorJurnal = $this->nomorJurnal();
+    
+            foreach ($request->jurnal as $key => $value) {
+                $data = Jurnal::create([
+                    'reff'=>$nomorJurnal->original,
+                    'nomor_jurnal'=>$nomorJurnal->original,
+                    'master_akun_id'=>$value['akunId'],
+                    'nominal'=>$value['saldo'],
+                    'jenis'=>$value['namaJenis'],
+                    'keterangan'=>$request->catatan,
+                    'created_at'=> date("Y-m-d h:i:s", strtotime($request->tanggalTransaksi)),
+                ]);
+                $output[] = $data;
+            }
+    
+            return response()->json($output, 200);        
+        } else{
+            // UNTUK SATUAN
+            $data = Jurnal::create([
+                'reff'=>$request['reff'],
+                'nomor_jurnal'=>$request['nomor_jurnal'],
+                'master_akun_id'=>$request['master_akun_id'],
+                'nominal'=>$request['nominal'],
+                'jenis'=>$request['jenis'],
+                'keterangan'=>$request['keterangan'],
+            ]);
+            return response()->json($data, 200);
+        }
+
+       
+    }
+
+    public function storeBatch(Request $request){
+
+        $output = [];
+        $nomorJurnal = $this->nomorJurnal();
+
+        foreach ($request->jurnal as $key => $value) {
+            $data = Jurnal::create([
+                'reff'=>$nomorJurnal->original,
+                'nomor_jurnal'=>$nomorJurnal->original,
+                'master_akun_id'=>$value['akunId'],
+                'nominal'=>$value['saldo'],
+                'jenis'=>$value['namaJenis'],
+                'keterangan'=>$request->catatan,
+                'created_at'=> date("Y-m-d h:i:s", strtotime($request->tanggalTransaksi)),
+            ]);
+            $output[] = $data;
+        }
+
+        return response()->json($output, 200);
     }
 
     public function nomorJurnal(){
