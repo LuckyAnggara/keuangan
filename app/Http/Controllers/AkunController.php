@@ -9,7 +9,7 @@ use App\Models\Akun;
 
 class AkunController extends Controller
 {
-    public function index(){
+    public function index($year = null){
         $header = DB::table('jenis_akun')
         ->select('jenis_akun.*')
         ->where('deleted_at')    
@@ -17,21 +17,35 @@ class AkunController extends Controller
 
 
         foreach ($header as $key => $value) {
-            $saldo = 0;
+            $headerSaldo = 0;
             $subheader = DB::table('master_akun')
             ->select('master_akun.*')
             ->where('deleted_at')
             ->where('header','=',0)
+            ->where('komponen','=',null)    
             ->where('jenis_akun_id','=',$value->id)    
             ->orderBy('kode_akun','ASC')
             ->get();
 
             foreach ($subheader as $key => $sub) {
-                $sub->saldo = $this->cekSaldo($sub->id);
-                $saldo +=$sub->saldo;
+                $saldo = 0;
+                $komponen = DB::table('master_akun')
+                    ->where('komponen','=', $sub->kode_akun)
+                    ->where('deleted_at')
+                    ->orderBy('kode_akun','ASC')
+                    ->get();
+                foreach ($komponen as $key => $komp) {
+                        $komp->saldo = $this->cekSaldo($komp->id, $year);
+                        $saldo +=$komp->saldo;
+                }
+                $sub->komponen = $komponen;
+                $subHeaderSaldo = $this->cekSaldo($sub->id, $year);
+                $sub->saldo = $saldo + $subHeaderSaldo;
+
+                $headerSaldo += $sub->saldo;
             }
 
-            $value->saldo = $saldo;
+            $value->saldo = $headerSaldo;
             $value->subheader = $subheader;
             $output[] = $value;
         }
@@ -39,11 +53,17 @@ class AkunController extends Controller
         return response()->json($output, 200);
     }
 
-    function cekSaldo($id){
+    function cekSaldo($id, $year){
+        
+        $dateawal = date($year.'-01-01 00:00:01');
+        $dateakhir = date($year.'-12-31 23:59:59');
+
         $saldo = 0;
         $data = DB::table('master_jurnal')
         ->where('master_akun_id','=',$id)    
         ->where('master_jurnal.deleted_at')
+        ->where('master_jurnal.created_at','>',$dateawal)    
+        ->where('master_jurnal.created_at','<',$dateakhir)  
         ->get();
 
         foreach ($data as $key => $value) {

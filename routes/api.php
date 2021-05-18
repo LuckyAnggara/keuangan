@@ -24,16 +24,20 @@ Route::group(['prefix' => 'jurnal'], function () {
     //POST
     Route::post('/store', 'JurnalController@store');
     Route::post('/storebatch', 'JurnalController@storeBatch');
+    Route::post('/retur', 'JurnalController@retur');
     //GET
-    Route::get('/{dd}/{ddd}', 'JurnalController@index');
+    Route::get('/{cabang}/{dd}/{ddd}', 'JurnalController@index');
+    Route::get('/{nomorjurnal}', 'JurnalController@geJurnalByNomorJurnal');
     Route::get('/reqnomorjurnal', 'JurnalController@nomorJurnal');
+    //delete
+    Route::delete('/delete/{nomorJurnal}', 'JurnalController@destroy');
 
 });
 
 // LEDGER
 Route::group(['prefix' => 'ledger'], function () {
     //GET
-    Route::get('/{id}/{dd}/{ddd}', 'LedgerController@detail');
+    Route::get('/{cabang}/{id}/{dd}/{ddd}', 'LedgerController@detail');
 });
 
 // AKUN
@@ -41,7 +45,7 @@ Route::group(['prefix' => 'akun'], function () {
     //POST
     Route::post('/store', 'AkunController@store');
     //GET
-    Route::get('/', 'AkunController@index');
+    Route::get('/tahun/{tahun}', 'AkunController@index');
     Route::get('/ceksaldo/{id}', 'AkunController@cekSaldo');
     // Route::get('/{id}', 'PersediaanController@show');
     //DESTROY

@@ -9,7 +9,7 @@ use App\Models\Jurnal;
 
 class LedgerController extends Controller
 {
-    public function detail($id, $dd, $ddd){
+    public function detail($cabang, $id, $dd, $ddd){
 
         $dateawal = date("Y-m-d 00:00:01", strtotime($dd));
         $dateakhir = date("Y-m-d 23:59:59", strtotime($ddd));
@@ -27,9 +27,11 @@ class LedgerController extends Controller
         ->select('master_jurnal.*', 'master_akun.nama as nama_akun','master_akun.kode_akun as kode_akun')
         ->join('master_akun','master_jurnal.master_akun_id','=','master_akun.id')    
         ->where('master_jurnal.master_akun_id','=',$id)    
-        ->where('master_jurnal.created_at','>',$dateawal)    
-        ->where('master_jurnal.created_at','<',$dateakhir)    
+        ->where('master_jurnal.cabang_id','=',$cabang)    
+        // ->where('master_jurnal.created_at','>',$dateawal)    
+        // ->where('master_jurnal.created_at','<',$dateakhir)    
         ->where('master_jurnal.deleted_at')
+        ->orderBy('master_jurnal.created_at', 'asc')
         ->get();
 
 
