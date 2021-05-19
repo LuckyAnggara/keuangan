@@ -51,3 +51,9 @@ Route::group(['prefix' => 'akun'], function () {
     //DESTROY
     // Route::delete('/{id}', 'BarangController@destroy');
 });
+
+// NERACA
+Route::group(['prefix' => 'neraca'], function () {
+    //GET
+    Route::get('/tahun/{tahun}', 'NeracaController@index');
+});
