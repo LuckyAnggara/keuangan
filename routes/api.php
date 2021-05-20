@@ -57,3 +57,10 @@ Route::group(['prefix' => 'neraca'], function () {
     //GET
     Route::get('/tahun/{tahun}', 'NeracaController@index');
 });
+
+
+// LABARUGI
+Route::group(['prefix' => 'labarugi'], function () {
+    //GET
+    Route::get('/tahun/{tahun}', 'LabaRugiController@index');
+});

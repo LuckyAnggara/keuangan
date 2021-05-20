@@ -47,7 +47,7 @@ class NeracaController extends Controller
                 if($komponen->count() > 0){
                     $komponen = $komponen->get();
                     foreach ($komponen as $key => $komp) {
-                        $komp->saldo = $this->cekSaldo($komp->id, $year);
+                        $komp->saldo = $this->cekSaldo($komp->id, $komp->saldo_normal, $year);
                         $saldo +=$komp->saldo;
                     }
                 }else{
@@ -55,7 +55,7 @@ class NeracaController extends Controller
                 }
 
                 $sub->komponen = $komponen;
-                $subsaldo = $this->cekSaldo($sub->id, $year);
+                $subsaldo = $this->cekSaldo($sub->id,$sub->saldo_normal, $year);
                 $sub->saldo = $saldo + $subsaldo;
     
                 $headsaldo += $sub->saldo;
@@ -103,7 +103,7 @@ class NeracaController extends Controller
                 if($komponen->count() > 0){
                     $komponen = $komponen->get();
                     foreach ($komponen as $key => $komp) {
-                        $komp->saldo = $this->cekSaldo($komp->id, $year);
+                        $komp->saldo = $this->cekSaldo($komp->id,  $komp->saldo_normal,  $year);
                         $saldo +=$komp->saldo;
                     }
                 }else{
@@ -111,7 +111,7 @@ class NeracaController extends Controller
                 }
 
                 $sub->komponen = $komponen;
-                $subsaldo = $this->cekSaldo($sub->id, $year);
+                $subsaldo = $this->cekSaldo($sub->id, $sub->saldo_normal, $year);
                 $sub->saldo = $saldo + $subsaldo;
     
                 $headsaldo += $sub->saldo;
@@ -132,14 +132,14 @@ class NeracaController extends Controller
         }
 
         return [
-            'nama' => 'Laba di tahan',
+            'nama' => 'RETAINED EARNING',
             'saldo' => $pendapatan - $beban
         ];
 
     }
 
 
-    function cekSaldo($id, $year){
+    function cekSaldo($id, $sifat, $year){
         
         $dateawal = date($year.'-01-01 00:00:01');
         $dateakhir = date($year.'-12-31 23:59:59');
@@ -152,13 +152,24 @@ class NeracaController extends Controller
         ->where('master_jurnal.created_at','<',$dateakhir)  
         ->get();
 
-        foreach ($data as $key => $value) {
-            if($value->jenis === "DEBIT"){
-                $saldo += $value->nominal;
-            }else{
-                $saldo -= $value->nominal;
+        if($sifat == 'DEBIT'){
+            foreach ($data as $key => $value) {
+                if($value->jenis === "DEBIT"){
+                    $saldo += $value->nominal;
+                }else{
+                    $saldo -= $value->nominal;
+                }
+            }
+        }else{
+            foreach ($data as $key => $value) {
+                if($value->jenis === "KREDIT"){
+                    $saldo += $value->nominal;
+                }else{
+                    $saldo -= $value->nominal;
+                }
             }
         }
+
         return $saldo;
     }
 }
