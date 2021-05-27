@@ -20,6 +20,8 @@ class LabaRugiController extends Controller
 
         $jenis = ['4','5'];
         $output = [];
+        $totalPendapatan = 0;
+        $totalBeban = 0;
 
         foreach ($jenis as $key => $value) {
             $nama = 'pendapatan';
@@ -27,7 +29,6 @@ class LabaRugiController extends Controller
                 $nama = 'beban';
             }
 
-            $headsaldo = 0;
             $dd = DB::table('master_akun')
             ->where('deleted_at')
             ->where('header','=',0)
@@ -45,16 +46,38 @@ class LabaRugiController extends Controller
             
                 $subsaldo = $this->cekSaldo($sub->id,$sub->saldo_normal, $year);
                 $sub->saldo = $saldo + $subsaldo;
-                $headsaldo += $sub->saldo;
             }
 
             $output[$nama] = $dd;
         }
+
+        foreach ($output['pendapatan'] as $key => $pendapatan) {
+            if($pendapatan->saldo_normal == 'DEBIT'){
+                $totalPendapatan -= $pendapatan->saldo;
+            }else{
+                $totalPendapatan += $pendapatan->saldo;
+            }
+        }
         $output['pendapatan'][] = [
             'nama' => 'TOTAL PENDAPATAN',
             'align' => 1,
-            'saldo' => $output['pendapatan'] - $output['pendapatan']['1']
+            'saldo' => $totalPendapatan
         ];
+
+        foreach ($output['beban'] as $key => $beban) {
+            if($beban->saldo_normal == 'DEBIT'){
+                $totalBeban += $beban->saldo;
+            }else{
+                $totalBeban -= $beban->saldo;
+            }
+        }
+        $output['beban'][] = [
+            'nama' => 'TOTAL BEBAN',
+            'align' => 1,
+            'saldo' => $totalBeban
+        ];
+
+        $output['labaRugi'] = $totalPendapatan - $totalBeban;
 
         return response()->json($output, 200);
     }

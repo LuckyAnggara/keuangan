@@ -74,7 +74,8 @@ class NeracaController extends Controller
         return response()->json($output, 200);
     }
 
-    public function labaditahan($year) {
+    public function labaditahan($year)
+    {
         if($year == null) {
             $year = 'Y';
         }
@@ -83,9 +84,15 @@ class NeracaController extends Controller
 
         $jenis = ['4','5'];
         $output = [];
+        $totalPendapatan = 0;
+        $totalBeban = 0;
 
         foreach ($jenis as $key => $value) {
-            $headsaldo = 0;
+            $nama = 'pendapatan';
+            if($value == '5'){
+                $nama = 'beban';
+            }
+
             $dd = DB::table('master_akun')
             ->where('deleted_at')
             ->where('header','=',0)
@@ -100,42 +107,34 @@ class NeracaController extends Controller
                     ->where('komponen','=', $sub->kode_akun)
                     ->where('deleted_at')
                     ->orderBy('kode_akun','ASC');
-                if($komponen->count() > 0){
-                    $komponen = $komponen->get();
-                    foreach ($komponen as $key => $komp) {
-                        $komp->saldo = $this->cekSaldo($komp->id,  $komp->saldo_normal,  $year);
-                        $saldo +=$komp->saldo;
-                    }
-                }else{
-                    $komponen = null;
-                }
-
-                $sub->komponen = $komponen;
-                $subsaldo = $this->cekSaldo($sub->id, $sub->saldo_normal, $year);
+            
+                $subsaldo = $this->cekSaldo($sub->id,$sub->saldo_normal, $year);
                 $sub->saldo = $saldo + $subsaldo;
-    
-                $headsaldo += $sub->saldo;
             }
 
-            $output[$value] = $dd;
+            $output[$nama] = $dd;
         }
 
-        $pendapatan = 0;
-        $beban = 0;
-
-        foreach ($output[4] as $key => $pend) {
-            $pendapatan += $pend->saldo;
+        foreach ($output['pendapatan'] as $key => $pendapatan) {
+            if($pendapatan->saldo_normal == 'DEBIT'){
+                $totalPendapatan -= $pendapatan->saldo;
+            }else{
+                $totalPendapatan += $pendapatan->saldo;
+            }
         }
-
-        foreach ($output[5] as $key => $beb) {
-            $beban += $beb->saldo;
+        
+        foreach ($output['beban'] as $key => $beban) {
+            if($beban->saldo_normal == 'DEBIT'){
+                $totalBeban += $beban->saldo;
+            }else{
+                $totalBeban -= $beban->saldo;
+            }
         }
 
         return [
-            'nama' => 'RETAINED EARNING',
-            'saldo' => $pendapatan - $beban
-        ];
-
+            'nama' => 'LABA BERJALAN',
+            'saldo' =>  $totalPendapatan - $totalBeban
+           ];
     }
 
 

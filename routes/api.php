@@ -64,3 +64,11 @@ Route::group(['prefix' => 'labarugi'], function () {
     //GET
     Route::get('/tahun/{tahun}', 'LabaRugiController@index');
 });
+
+// BEBAN
+Route::group(['prefix' => 'beban'], function () {
+    //GET
+    Route::get('/operasional/cabang/{cabang}/tahun/{tahun}', 'BebanController@operasional');
+     //POST
+     Route::post('/store', 'BebanController@store');
+});

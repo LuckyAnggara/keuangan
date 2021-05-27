@@ -14,8 +14,7 @@ class LedgerController extends Controller
         $dateawal = date("Y-m-d 00:00:01", strtotime($dd));
         $dateakhir = date("Y-m-d 23:59:59", strtotime($ddd));
 
-        $output['ledger'] = [];
-        $saldo = 0;
+        $headerSaldo = 0;
 
         $master = DB::table('master_akun')
         ->select('master_akun.*', 'jenis_akun.nama as nama_jenis')
@@ -23,32 +22,92 @@ class LedgerController extends Controller
         ->where('master_akun.id','=',$id)    
         ->first();
 
-        $ledger = DB::table('master_jurnal')
-        ->select('master_jurnal.*', 'master_akun.nama as nama_akun','master_akun.kode_akun as kode_akun')
-        ->join('master_akun','master_jurnal.master_akun_id','=','master_akun.id')    
-        ->where('master_jurnal.master_akun_id','=',$id)    
-        ->where('master_jurnal.cabang_id','=',$cabang)    
-        // ->where('master_jurnal.created_at','>',$dateawal)    
-        // ->where('master_jurnal.created_at','<',$dateakhir)    
-        ->where('master_jurnal.deleted_at')
-        ->orderBy('master_jurnal.created_at', 'asc')
-        ->get();
+        $komponen = DB::table('master_akun')
+                    ->where('komponen','=', $master->kode_akun)
+                    ->where('deleted_at')
+                    ->orderBy('kode_akun','ASC')
+                    ->get();
 
+        $master->komponen = $komponen;
 
-        foreach ($ledger as $key => $value) {
-            $data = $value;
-            if($value->jenis === "DEBIT"){
-                $saldo += $value->nominal;
-                $data->saldo = $saldo; 
+        if(count($master->komponen) > 0){
+            foreach ($komponen as $key => $value) {
+                $saldo = 0;
+                $ledger = DB::table('master_jurnal')
+                ->select('master_jurnal.*')
+                ->where('master_jurnal.master_akun_id','=',$value->id)    
+                ->where('master_jurnal.cabang_id','=',$cabang)       
+                ->where('master_jurnal.deleted_at')
+                ->where('master_jurnal.created_at','>',$dateawal)    
+                ->where('master_jurnal.created_at','<',$dateakhir)  
+                ->orderBy('master_jurnal.created_at', 'asc')
+                ->get();
+
+                $value->ledger = $ledger;
+
+                    if($value->saldo_normal == 'DEBIT'){
+                        foreach ($ledger as $key => $led) {
+                            if($led->jenis === "DEBIT"){
+                                $saldo += $led->nominal;
+                            }else{
+                                $saldo -= $led->nominal;
+                            }
+                            $led->saldo = $saldo;
+                        }
+                    }else{
+                        foreach ($ledger as $key => $led) {
+                            if($led->jenis === "KREDIT"){
+                                $saldo += $led->nominal;
+                            }else{
+                                $saldo -= $led->nominal;
+                            }
+                            $led->saldo = $saldo;
+                        }
+                    }
+                    $value->saldo = $saldo;
+                    $headerSaldo += $saldo;
+                }
+        }else{
+            $ledger = DB::table('master_jurnal')
+            ->select('master_jurnal.*')
+            ->where('master_jurnal.master_akun_id','=',$master->id)    
+            ->where('master_jurnal.cabang_id','=',$cabang)       
+            ->where('master_jurnal.deleted_at')
+            ->where('master_jurnal.created_at','>',$dateawal)    
+            ->where('master_jurnal.created_at','<',$dateakhir)  
+            ->orderBy('master_jurnal.created_at', 'asc')
+            ->get();
+
+            if($master->saldo_normal == 'DEBIT'){
+                foreach ($ledger as $key => $led) {
+                    if($led->jenis === "DEBIT"){
+                        $headerSaldo += $led->nominal;
+                    }else{
+                        $headerSaldo -= $led->nominal;
+                    }
+                    $led->saldo = $headerSaldo;
+                   
+                }
             }else{
-                $saldo -= $value->nominal;
-                $data->saldo = $saldo; 
+                foreach ($ledger as $key => $led) {
+                    if($led->jenis === "KREDIT"){
+                        $headerSaldo += $led->nominal;
+                    }else{
+                        $headerSaldo -= $led->nominal;
+                    }
+                    $led->saldo = $headerSaldo;
+                }
             }
-            $output['ledger'][] = $data;
+            $master->saldo = $headerSaldo;
+            $master->ledger = $ledger;
         }
-        $output['master'] = $master;
-        $output['master']->saldo = $saldo;
+          
+        $output = $master;
+        $output->saldo = $headerSaldo;
+        // $output['ledger']= $ledger;
 
         return response()->json($output, 200);  
     }
+
+
 }

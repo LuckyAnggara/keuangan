@@ -31,6 +31,7 @@ class JurnalController extends Controller
         $master = DB::table('master_jurnal')
         ->select('master_jurnal.*', 'master_akun.nama as nama_akun','master_akun.kode_akun as kode_akun')
         ->join('master_akun','master_jurnal.master_akun_id','=','master_akun.id')
+        ->where('master_jurnal.deleted_at')    
         ->where('master_jurnal.nomor_jurnal','=', $nomorJurnal)    
         ->get();
         
