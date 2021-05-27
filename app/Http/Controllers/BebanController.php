@@ -25,7 +25,8 @@ class BebanController extends Controller
         ->where('komponen', $master->kode_akun)
         ->whereIn('cabang_id', array(0, $cabang))
         ->get();
-        $detail = Beban::where('cabang_id', $cabang)->whereBetween('created_at',[$dateawal, $dateakhir])->get();
+        $detail = Beban::where('cabang_id', $cabang)->whereBetween('created_at',[$dateawal, $dateakhir])->get()->sortBy([['created_at','asc']]);
+
         $master->komponen = $komponen;
         $master->nama_jenis = 'BEBAN';
         $master->detail = $detail;
@@ -81,17 +82,18 @@ class BebanController extends Controller
 
     public function store(Request $payload){
         $output;
+        $akun = Akun::find($payload->master_akun_id);
         $master = Beban::create([
             'master_akun_id'=>$payload->master_akun_id,
             'nominal'=>$payload->nominal,
-            'catatan'=>$payload->catatan,
+            'catatan'=>$akun->nama.' - '. $payload->catatan,
             'user_id'=>$payload->user_id,
             'cabang_id'=>$payload->cabang_id,
+            'created_at'=> date("Y-m-d h:i:s", strtotime($payload->tanggal)),
         ]);
 
         $output['master'] = $master;
         if($master->id){
-            $akun = Akun::where('id',$payload->master_akun_id)->first();
 
             $data = Jurnal::groupBy('nomor_jurnal')->get(); // CEK DATA NOMOR JURNAL DENGAN GROUPING
             $prefix = date("ymd"); // PREFIX AWALAN PAKE TANGGAL TAHUN-BULAN-TANGGAL (EX 210422)
@@ -109,7 +111,7 @@ class BebanController extends Controller
                     'master_akun_id'=>$value->master_akun_id,
                     'nominal'=>$payload->nominal,
                     'jenis'=>$value->jenis,
-                    'keterangan'=> $akun->nama.' - '. $value->catatan,
+                    'keterangan'=> $akun->nama.' - '. $payload->catatan,
                     'user_id'=>$payload->user_id,
                     'cabang_id'=>$payload->cabang_id,
                 ]);
@@ -117,8 +119,17 @@ class BebanController extends Controller
             }
             $master->nomor_jurnal = $nomorJurnal;
             $master->save();
+            $output['akun'] = $akun;
         }
 
         return response()->json($output, 200);
+    }
+
+    public function destroy($id){
+        $beban = Beban::find($id);
+        $beban->delete();
+        $beban->jurnal = $beban->nomor_jurnal;
+
+        return response()->json($beban, 200);
     }
 }

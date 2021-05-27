@@ -76,6 +76,7 @@ class NeracaController extends Controller
 
     public function labaditahan($year)
     {
+        $cabang = 1;
         if($year == null) {
             $year = 'Y';
         }
@@ -102,14 +103,22 @@ class NeracaController extends Controller
             ->get();
     
             foreach ($dd as $key => $sub) {
-                $saldo = 0;
-                $komponen = DB::table('master_akun')
-                    ->where('komponen','=', $sub->kode_akun)
-                    ->where('deleted_at')
-                    ->orderBy('kode_akun','ASC');
-            
+                $headerSaldo = 0;
+                $komponen = Akun::where('deleted_at')
+                ->where('komponen', $sub->kode_akun)
+                ->whereIn('cabang_id', array(0, $cabang))
+                ->get();
+                $sub->komponen = $komponen;
+
+                foreach ($komponen as $key => $value) {
+                    $saldo = $this->cekSaldo($value->id,$value->saldo_normal, $year, $cabang);
+                    $value->saldo = $saldo;
+                    $headerSaldo += $saldo;
+                }
+                $sub->saldo = $headerSaldo;
+
                 $subsaldo = $this->cekSaldo($sub->id,$sub->saldo_normal, $year);
-                $sub->saldo = $saldo + $subsaldo;
+                $sub->saldo = $headerSaldo + $subsaldo;
             }
 
             $output[$nama] = $dd;
@@ -122,7 +131,12 @@ class NeracaController extends Controller
                 $totalPendapatan += $pendapatan->saldo;
             }
         }
-        
+        $output['pendapatan'][] = [
+            'nama' => 'TOTAL PENDAPATAN',
+            'align' => 1,
+            'saldo' => $totalPendapatan
+        ];
+
         foreach ($output['beban'] as $key => $beban) {
             if($beban->saldo_normal == 'DEBIT'){
                 $totalBeban += $beban->saldo;
@@ -130,6 +144,11 @@ class NeracaController extends Controller
                 $totalBeban -= $beban->saldo;
             }
         }
+        $output['beban'][] = [
+            'nama' => 'TOTAL BEBAN',
+            'align' => 1,
+            'saldo' => $totalBeban
+        ];
 
         return [
             'nama' => 'LABA BERJALAN',

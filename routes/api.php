@@ -69,6 +69,8 @@ Route::group(['prefix' => 'labarugi'], function () {
 Route::group(['prefix' => 'beban'], function () {
     //GET
     Route::get('/operasional/cabang/{cabang}/tahun/{tahun}', 'BebanController@operasional');
-     //POST
-     Route::post('/store', 'BebanController@store');
+    //POST
+    Route::post('/store', 'BebanController@store');
+    //delete
+    Route::delete('/delete/{id}', 'BebanController@destroy');
 });
