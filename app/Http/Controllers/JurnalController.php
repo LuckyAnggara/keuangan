@@ -56,7 +56,7 @@ class JurnalController extends Controller
                 ]);
                 $output[] = $data;
             }
-            $output['nomor_jurnal'] = $nomorJurnal->original;
+            $output['nomor_jurnal'] = $request->nomor_jurnal != '' ? $request->nomor_jurnal : $nomorJurnal->original;
             return response()->json($output, 200);        
         } else{
             // UNTUK SATUAN
