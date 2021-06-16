@@ -116,7 +116,7 @@ class JurnalController extends Controller
 
     public function retur(Request $payload){
         $output = [];
-        $jurnal = Jurnal::where('nomor_jurnal',$payload->jurnal)->get();
+        $jurnal = Jurnal::where('nomor_jurnal', $payload)->get();
 
         foreach ($jurnal as $key => $value) {
             $jenis = 'DEBIT';
