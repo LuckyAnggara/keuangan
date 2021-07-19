@@ -24,11 +24,11 @@ Route::group(['prefix' => 'jurnal'], function () {
     //POST
     Route::post('/store', 'JurnalController@store');
     Route::post('/storebatch', 'JurnalController@storeBatch');
-    Route::post('/retur', 'JurnalController@retur');
     //GET
     Route::get('/{cabang}/{dd}/{ddd}', 'JurnalController@index');
     Route::get('/{nomorjurnal}', 'JurnalController@geJurnalByNomorJurnal');
     Route::get('/reqnomorjurnal', 'JurnalController@nomorJurnal');
+    Route::get('/retur/{nomorjurnal}', 'JurnalController@retur');
     //delete
     Route::delete('/delete/{nomorJurnal}', 'JurnalController@destroy');
 

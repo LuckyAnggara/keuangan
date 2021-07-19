@@ -9,6 +9,8 @@ use App\Models\Jurnal;
 
 class JurnalController extends Controller
 {
+
+    
     public function index($cabang,$dd, $ddd){
 
         $dateawal = date("Y-m-d 00:00:01", strtotime($dd));
@@ -70,6 +72,7 @@ class JurnalController extends Controller
                 'user_id'=>$request['user_id'],
                 'cabang_id'=>$request['cabang_id'],
             ]);
+            
             return response()->json($data, 200);
         }
     }
@@ -114,26 +117,40 @@ class JurnalController extends Controller
         return response()->json($prefix.$output, 200);
     }
 
-    public function retur(Request $payload){
+    public function retur($nomorJurnal){
         $output = [];
-        $jurnal = Jurnal::where('nomor_jurnal', $payload)->get();
+        $jurnal = Jurnal::where('nomor_jurnal', $nomorJurnal)->get();
 
         foreach ($jurnal as $key => $value) {
             $jenis = 'DEBIT';
             if($value->jenis == 'DEBIT'){
                 $jenis = 'KREDIT';
             }
-            $dd = Jurnal::create([
-                'reff'=>$value->reff,
-                'nomor_jurnal'=>$value->nomor_jurnal,
-                'master_akun_id'=>$value->master_akun_id,
-                'nominal'=>$value->nominal,
-                'jenis'=>$jenis,
-                'keterangan'=>'RETUR-'.$value->keterangan,
-                'user_id'=>$value->user_id,
-                'cabang_id'=>$value->cabang_id,
-            ]);
 
+            if($value->master_akun_id == 32){
+                // JIKA RETUR . AKUN PENJUALAN TIDAK DI DEBIT. TAPI PROSES DEBIT DI AKUN RETUR PENJUALAN
+                $dd = Jurnal::create([
+                    'reff'=>$value->reff,
+                    'nomor_jurnal'=>$value->nomor_jurnal,
+                    'master_akun_id'=>34,
+                    'nominal'=>$value->nominal,
+                    'jenis'=>$jenis,
+                    'keterangan'=>'RETUR-'.$value->keterangan,
+                    'user_id'=>$value->user_id,
+                    'cabang_id'=>$value->cabang_id,
+                ]);
+            }else{
+                $dd = Jurnal::create([
+                    'reff'=>$value->reff,
+                    'nomor_jurnal'=>$value->nomor_jurnal,
+                    'master_akun_id'=>$value->master_akun_id,
+                    'nominal'=>$value->nominal,
+                    'jenis'=>$jenis,
+                    'keterangan'=>'RETUR-'.$value->keterangan,
+                    'user_id'=>$value->user_id,
+                    'cabang_id'=>$value->cabang_id,
+                ]);
+            }
             $output[] = $dd;
         }
 

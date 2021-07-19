@@ -70,6 +70,7 @@ class LabaRugiController extends Controller
         $output['pendapatan'][] = [
             'nama' => 'TOTAL PENDAPATAN',
             'align' => 1,
+            'total' => true,
             'saldo' => $totalPendapatan
         ];
 
@@ -83,6 +84,7 @@ class LabaRugiController extends Controller
         $output['beban'][] = [
             'nama' => 'TOTAL BEBAN',
             'align' => 1,
+            'total' => true,
             'saldo' => $totalBeban
         ];
 

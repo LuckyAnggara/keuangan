@@ -42,7 +42,12 @@ class AkunController extends Controller
                 $subHeaderSaldo =$this->cekSaldo($sub->id,$sub->saldo_normal, $year);
                 $sub->saldo = $saldo + $subHeaderSaldo;
 
-                $headerSaldo += $sub->saldo;
+                if($sub->saldo_normal == "DEBIT"){
+                    $headerSaldo += $sub->saldo;
+                }else{
+                    $headerSaldo -= $sub->saldo;
+                }
+                $headerSaldo = abs($headerSaldo);
             }
 
             $value->saldo = $headerSaldo;
@@ -68,7 +73,7 @@ class AkunController extends Controller
 
         if($sifat == 'DEBIT'){
             foreach ($data as $key => $value) {
-                if($value->jenis === "DEBIT"){
+                if($value->jenis == "DEBIT"){
                     $saldo += $value->nominal;
                 }else{
                     $saldo -= $value->nominal;
@@ -76,7 +81,7 @@ class AkunController extends Controller
             }
         }else{
             foreach ($data as $key => $value) {
-                if($value->jenis === "KREDIT"){
+                if($value->jenis == "KREDIT"){
                     $saldo += $value->nominal;
                 }else{
                     $saldo -= $value->nominal;
