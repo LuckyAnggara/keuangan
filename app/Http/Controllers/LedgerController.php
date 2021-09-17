@@ -10,9 +10,13 @@ use App\Models\Jurnal;
 class LedgerController extends Controller
 {
     public function detail($cabang, $id, $dd, $ddd){
-
         $dateawal = date("Y-m-d 00:00:01", strtotime($dd));
         $dateakhir = date("Y-m-d 23:59:59", strtotime($ddd));
+
+        if($ddd == "null"){
+            $dateakhir = date("Y-m-d 23:59:59", strtotime($dateawal));
+        }
+        // return $dateakhir;
 
         $headerSaldo = 0;
 
@@ -24,11 +28,13 @@ class LedgerController extends Controller
 
         $komponen = DB::table('master_akun')
                     ->where('komponen','=', $master->kode_akun)
+                    ->where('cabang_id', $cabang)
                     ->where('deleted_at')
                     ->orderBy('kode_akun','ASC')
                     ->get();
 
         $master->komponen = $komponen;
+        
 
         if(count($master->komponen) > 0){
             foreach ($komponen as $key => $value) {
@@ -38,8 +44,9 @@ class LedgerController extends Controller
                 ->where('master_jurnal.master_akun_id','=',$value->id)    
                 ->where('master_jurnal.cabang_id','=',$cabang)       
                 ->where('master_jurnal.deleted_at')
-                ->where('master_jurnal.created_at','>',$dateawal)    
-                ->where('master_jurnal.created_at','<',$dateakhir)  
+                ->whereDate('master_jurnal.created_at','>=',$dateawal)    
+                ->whereDate('master_jurnal.created_at','<=',$dateakhir)  
+                ->orderBy('master_jurnal.id', 'asc')
                 ->orderBy('master_jurnal.created_at', 'asc')
                 ->get();
 
@@ -73,10 +80,13 @@ class LedgerController extends Controller
             ->where('master_jurnal.master_akun_id','=',$master->id)    
             ->where('master_jurnal.cabang_id','=',$cabang)       
             ->where('master_jurnal.deleted_at')
-            ->where('master_jurnal.created_at','>',$dateawal)    
-            ->where('master_jurnal.created_at','<',$dateakhir)  
+            ->whereDate('master_jurnal.created_at','>',$dateawal)    
+            ->whereDate('master_jurnal.created_at','<',$dateakhir)  
+            ->orderBy('master_jurnal.id', 'asc')
             ->orderBy('master_jurnal.created_at', 'asc')
             ->get();
+
+            // return $ledger;
 
             if($master->saldo_normal == 'DEBIT'){
                 foreach ($ledger as $key => $led) {
@@ -104,10 +114,7 @@ class LedgerController extends Controller
           
         $output = $master;
         $output->saldo = $headerSaldo;
-        // $output['ledger']= $ledger;
 
         return response()->json($output, 200);  
     }
-
-
 }

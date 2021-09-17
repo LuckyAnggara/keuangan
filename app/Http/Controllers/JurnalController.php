@@ -52,7 +52,7 @@ class JurnalController extends Controller
                     'nominal'=>$value['saldo'],
                     'jenis'=>$value['namaJenis'],
                     'keterangan'=> $value['catatan']=='' ? $request->catatan : $value['catatan'],
-                    'created_at'=> date("Y-m-d h:i:s", strtotime($request->tanggalTransaksi)),
+                    'created_at'=> date("Y-m-d 00:00:00", strtotime($request->tanggalTransaksi)),
                     'user_id'=>$request['user_id'],
                     'cabang_id'=>$request['cabang_id'],
                 ]);
@@ -101,7 +101,7 @@ class JurnalController extends Controller
                 'nominal'=>$value['saldo'],
                 'jenis'=>$value['namaJenis'],
                 'keterangan'=>$request->catatan,
-                'created_at'=> date("Y-m-d h:i:s", strtotime($request->tanggalTransaksi)),
+                'created_at'=> date("Y-m-d 00:00:00", strtotime($request->tanggalTransaksi)),
             ]);
             $output[] = $data;
         }

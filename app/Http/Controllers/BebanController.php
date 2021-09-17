@@ -17,7 +17,7 @@ class BebanController extends Controller
         if($year == null) {
             $year = 'Y';
         }
-        $dateawal = date($year.'-01-01 00:00:01');
+        $dateawal = date($year.'-01-01 00:00:00');
         $dateakhir = date($year.'-12-31 23:59:59');
 
         $master = Akun::where('id',42)->first();
@@ -25,7 +25,10 @@ class BebanController extends Controller
         ->where('komponen', $master->kode_akun)
         ->whereIn('cabang_id', array(0, $cabang))
         ->get();
-        $detail = Beban::where('cabang_id', $cabang)->whereBetween('created_at',[$dateawal, $dateakhir])->get()->sortBy([['created_at','asc']]);
+        $detail = Beban::where('cabang_id', $cabang)
+        // ->whereBetween('created_at',[$dateawal, $dateakhir])
+        ->whereYear('created_at', $year)
+        ->get()->sortBy([['created_at','asc']]);
 
         $master->komponen = $komponen;
         $master->nama_jenis = 'BEBAN';
@@ -47,7 +50,7 @@ class BebanController extends Controller
     
     function cekSaldo($id, $sifat, $year, $cabang){
         
-        $dateawal = date($year.'-01-01 00:00:01');
+        $dateawal = date($year.'-01-01 00:00:00');
         $dateakhir = date($year.'-12-31 23:59:59');
 
         $saldo = 0;
@@ -81,7 +84,7 @@ class BebanController extends Controller
     }
 
     public function store(Request $payload){
-        $output;
+        $output = [];
         $akun = Akun::find($payload->master_akun_id);
         $master = Beban::create([
             'master_akun_id'=>$payload->master_akun_id,
@@ -102,7 +105,7 @@ class BebanController extends Controller
             $nomorJurnal = $prefix.$nomorJurnal; // DATA DITAMBAH 1
 
             $nomor_akun[] = (object) array('master_akun_id' => $payload->master_akun_id, 'jenis' => 'DEBIT');
-            $nomor_akun[] = (object) array('master_akun_id' => '4', 'jenis' => 'KREDIT');
+            $nomor_akun[] = (object) array('master_akun_id' => $payload->kas['kode_akun_id'], 'jenis' => 'KREDIT');
 
             foreach ($nomor_akun as $key => $value) {
                 $jurnal = Jurnal::create([
@@ -117,6 +120,7 @@ class BebanController extends Controller
                 ]);
                 $output['jurnal'][] = $jurnal;
             }
+            
             $master->nomor_jurnal = $nomorJurnal;
             $master->save();
             $output['akun'] = $akun;
@@ -131,5 +135,21 @@ class BebanController extends Controller
         $beban->jurnal = $beban->nomor_jurnal;
 
         return response()->json($beban, 200);
+    }
+
+    public function gaji($cabang, $year)
+    {
+        $saldo = 0;
+        if($year == null) {
+            $year = 'Y';
+        }
+        $master = Akun::where('id',40)->first();
+
+        $saldo = $this->cekSaldo($master->id,$master->saldo_normal, $year, $cabang);
+        $master->saldo = $saldo;
+
+        $output = $master;
+
+        return response()->json($output, 200);
     }
 }

@@ -10,15 +10,14 @@ use App\Models\Akun;
 
 class LabaRugiController extends Controller
 {
-    public function index($year)
+    public function index(Request $payload)
     {
-        $cabang = 1;
+        $year = $payload->input('tahun');
+        $cabang_id = $payload->input('cabang_id');
+        
         if($year == null) {
             $year = 'Y';
         }
-        $dateawal = date($year.'-01-01 00:00:01');
-        $dateakhir = date($year.'-12-31 23:59:59');
-
         $jenis = ['4','5'];
         $output = [];
         $totalPendapatan = 0;
@@ -42,18 +41,18 @@ class LabaRugiController extends Controller
                 $headerSaldo = 0;
                 $komponen = Akun::where('deleted_at')
                 ->where('komponen', $sub->kode_akun)
-                ->whereIn('cabang_id', array(0, $cabang))
+                ->whereIn('cabang_id', array(0, $cabang_id))
                 ->get();
                 $sub->komponen = $komponen;
 
                 foreach ($komponen as $key => $value) {
-                    $saldo = $this->cekSaldo($value->id,$value->saldo_normal, $year, $cabang);
+                    $saldo = $this->cekSaldo($value->id,$value->saldo_normal, $year, $cabang_id);
                     $value->saldo = $saldo;
                     $headerSaldo += $saldo;
                 }
                 $sub->saldo = $headerSaldo;
 
-                $subsaldo = $this->cekSaldo($sub->id,$sub->saldo_normal, $year);
+                $subsaldo = $this->cekSaldo($sub->id,$sub->saldo_normal, $year, $cabang_id);
                 $sub->saldo = $headerSaldo + $subsaldo;
             }
 
@@ -94,17 +93,16 @@ class LabaRugiController extends Controller
     }
 
     
-    function cekSaldo($id, $sifat, $year){
+    function cekSaldo($id, $sifat, $year, $cabang_id){
         
-        $dateawal = date($year.'-01-01 00:00:01');
-        $dateakhir = date($year.'-12-31 23:59:59');
+        // $dateawal = date($year.'-01-01 00:00:00');
+        // $dateakhir = date($year.'-12-31 23:59:59');
 
         $saldo = 0;
         $data = DB::table('master_jurnal')
         ->where('master_akun_id','=',$id)    
-        ->where('master_jurnal.deleted_at')
-        ->where('master_jurnal.created_at','>',$dateawal)    
-        ->where('master_jurnal.created_at','<',$dateakhir)  
+        ->where('master_jurnal.cabang_id', $cabang_id)
+        ->whereYear('master_jurnal.created_at',$year)    
         ->get();
 
         if($sifat == 'DEBIT'){
