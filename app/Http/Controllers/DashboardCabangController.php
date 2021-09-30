@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\DB;
 
 use App\Models\Jurnal;
@@ -28,7 +29,7 @@ class DashboardCabangController extends Controller
             $label[] = $days_ago;
         }
 
-        $output['series']['name'] = 'Total Laba Harian';
+        $output['series']['name'] = 'Total Omset Harian';
         $output['series']['data'] = $data;
         $output['label'] = $label;
         $output['total'] = $data[$jumlah_hari];
@@ -47,13 +48,14 @@ class DashboardCabangController extends Controller
 
         for ($i=0; $i <= $jumlah_hari ; $i++) { 
             $days_ago = date('Y-m-d', strtotime($days . '+'.$i.' days',));
-            $omset = Jurnal::where('master_akun_id',32)->where('cabang_id',$cabang_id)->whereDate('created_at', $days_ago)->sum('nominal');
+            // $omset = Jurnal::where('master_akun_id',32)->where('cabang_id',$cabang_id)->whereDate('created_at', $days_ago)->sum('nominal');
             $hpp = Jurnal::where('master_akun_id',44)->where('cabang_id',$cabang_id)->whereDate('created_at', $days_ago)->sum('nominal');
-            $jumlah[] = $omset-$hpp;
+            // $jumlah[] = $omset- $hpp;
+            $jumlah[] = $hpp;
             $label[] = $days_ago;
         }
 
-        $output['series']['name'] = 'Total Omset Harian';
+        $output['series']['name'] = 'Total HPP Harian';
         $output['series']['data'] = $jumlah;
         $output['label'] = $label;
         $output['total'] = $jumlah[$jumlah_hari];
@@ -72,15 +74,16 @@ class DashboardCabangController extends Controller
             $hppDebit = Jurnal::where('master_akun_id',44)->where('cabang_id',$cabang_id)->where('jenis','DEBIT')->whereYear('created_at', $tahun)->whereMonth('created_at', $value)->sum('nominal');
             $hppKredit = Jurnal::where('master_akun_id',44)->where('cabang_id',$cabang_id)->where('jenis','KREDIT')->whereYear('created_at', $tahun)->whereMonth('created_at', $value)->sum('nominal');
             $beb = DB::table('master_beban')->where('cabang_id',$cabang_id)->whereYear('created_at', $tahun)->whereMonth('created_at', $value)->sum('nominal');
+            $gaji = Jurnal::where('master_akun_id',40)->where('cabang_id',$cabang_id)->whereYear('created_at', $tahun)->whereMonth('created_at', $value)->sum('nominal');
 
-            $labaBersih = (( $omsetKredit - $omsetDebit) - ($hppDebit - $hppKredit)) - $beb;
+            $labaBersih = (( $omsetKredit - $omsetDebit) - ($hppDebit - $hppKredit)) - ($beb + $gaji);
 
             // if($labaBersih === 0){
             //     continue;
             // }
 
             $laba[] = $labaBersih;
-            $beban[] = 0- $beb;
+            $beban[] = 0 - ($beb + $gaji);
             // $label[] = date('F', mktime(0, 0, 0, $value, 10));
         }
         $labaY['name'] = 'Laba Bersih';
@@ -90,7 +93,7 @@ class DashboardCabangController extends Controller
         $output['series'][] = $labaY;
         $output['series'][] = $bebanY;
         // $output['label'] = $label;
-        $output['labaBersih'] = $laba[date('n')- 1];
+        $output['laba_bersih'] = $laba[date('n')- 1];
         return response()->json($output, 200);
     }
 
@@ -105,8 +108,9 @@ class DashboardCabangController extends Controller
 
         for ($i=0; $i <= $jumlah_hari ; $i++) { 
             $days_ago = date('Y-m-d', strtotime($days . '+'.$i.' days',));
-            $nominal = DB::table('master_beban')->where('cabang_id',$cabang_id)->whereDate('created_at', $days_ago)->sum('nominal');
-            $jumlah[] = $nominal;
+            $beban = DB::table('master_beban')->where('cabang_id',$cabang_id)->whereDate('created_at', $days_ago)->sum('nominal');
+            $gaji = Jurnal::where('master_akun_id',40)->where('cabang_id',$cabang_id)->whereDate('created_at', $days_ago)->sum('nominal');
+            $jumlah[] = $beban + $gaji;
             $label[] = $days_ago;
         }
 
@@ -117,6 +121,36 @@ class DashboardCabangController extends Controller
         return response()->json($output, 200);
     }
 
+    public function persediaanHarian(Request $payload){
+        $cabang_id = $payload->input('cabang_id');
+        $jumlah_hari = $payload->input('hari');
+        $output = [];
+        $jumlah = [];
+        $label = [];
+        $jumlah_hari = 6;
+        $days = date('Y-m-d', strtotime('-'.$jumlah_hari.' days'));
+
+        $gudang = Http::get(mainApi().'gudang/gudang?cabang_id='.$cabang_id)->json();
+        
+        for ($i=0; $i <= $jumlah_hari ; $i++) { 
+            $days_ago = date('Y-m-d', strtotime($days . '+'.$i.' days',));
+            $totalPersediaan = 0;
+            foreach ($gudang as $key => $value) {
+                $kredit = Jurnal::where('master_akun_id',$value['kode_akun_id'])->where('cabang_id',$cabang_id)->where('jenis','KREDIT')->whereBetween('created_at', ['2021-01-01', $days_ago])->sum('nominal');
+                $debit = Jurnal::where('master_akun_id',$value['kode_akun_id'])->where('cabang_id',$cabang_id)->where('jenis','DEBIT')->whereBetween('created_at', ['2021-01-01', $days_ago])->sum('nominal');
+                $totalPersediaan += $debit - $kredit;     
+            }
+            $jumlah[] = $totalPersediaan;
+            $label[] = $days_ago;
+        }
+
+
+        $output['series']['name'] = 'Total Persediaan Harian';
+        $output['series']['data'] = $jumlah;
+        $output['label'] = $label;
+        $output['total'] = $jumlah[$jumlah_hari];
+        return response()->json($output, 200);
+    }
     public function kasHarian(Request $payload){
         $cabang_id = $payload->input('cabang_id');
 
@@ -124,8 +158,8 @@ class DashboardCabangController extends Controller
         $kas = Akun::select('nama','id')->where('komponen', '1.1.2')->where('cabang_id', $cabang_id)->get();
 
         foreach ($kas as $key => $value) {
-            $kredit = Jurnal::where('master_akun_id',$value->id)->where('cabang_id',$cabang_id)->where('jenis','KREDIT')->whereDate('created_at', Carbon::today())->sum('nominal');
-            $debit = Jurnal::where('master_akun_id',$value->id)->where('cabang_id',$cabang_id)->where('jenis','DEBIT')->whereDate('created_at', Carbon::today())->sum('nominal');
+            $kredit = Jurnal::where('master_akun_id',$value->id)->where('cabang_id',$cabang_id)->where('jenis','KREDIT')->whereBetween('created_at', ['2021-01-01',Carbon::today()])->sum('nominal');
+            $debit = Jurnal::where('master_akun_id',$value->id)->where('cabang_id',$cabang_id)->where('jenis','DEBIT')->whereBetween('created_at', ['2021-01-01',Carbon::today()])->sum('nominal');
             $totalKas += $debit - $kredit;
         }
 
@@ -146,8 +180,8 @@ class DashboardCabangController extends Controller
             $debit = Jurnal::where('master_akun_id',$value->id)->where('cabang_id',$cabang_id)->where('jenis','DEBIT')->sum('nominal');    
             $totalUtang += $kredit - $debit;
         }
-
-
         return response()->json($totalUtang, 200);
     }
+
+
 }

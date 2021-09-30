@@ -13,11 +13,14 @@ class LabaRugiController extends Controller
     public function index(Request $payload)
     {
         $year = $payload->input('tahun');
+        $month = $payload->input('bulan');
+        $day = $payload->input('hari');
+
         $cabang_id = $payload->input('cabang_id');
         
-        if($year == null) {
-            $year = 'Y';
-        }
+        // if($year == null) {
+        //     $year = 'Y';
+        // }
         $jenis = ['4','5'];
         $output = [];
         $totalPendapatan = 0;
@@ -46,13 +49,13 @@ class LabaRugiController extends Controller
                 $sub->komponen = $komponen;
 
                 foreach ($komponen as $key => $value) {
-                    $saldo = $this->cekSaldo($value->id,$value->saldo_normal, $year, $cabang_id);
+                    $saldo = $this->cekSaldo($value->id,$value->saldo_normal, $cabang_id,$year, $month, $day);
                     $value->saldo = $saldo;
                     $headerSaldo += $saldo;
                 }
                 $sub->saldo = $headerSaldo;
 
-                $subsaldo = $this->cekSaldo($sub->id,$sub->saldo_normal, $year, $cabang_id);
+                $subsaldo = $this->cekSaldo($sub->id,$sub->saldo_normal, $cabang_id,$year, $month, $day);
                 $sub->saldo = $headerSaldo + $subsaldo;
             }
 
@@ -93,16 +96,27 @@ class LabaRugiController extends Controller
     }
 
     
-    function cekSaldo($id, $sifat, $year, $cabang_id){
+    function cekSaldo($id, $sifat, $cabang_id, $year=null, $month=null, $day=null){
         
-        // $dateawal = date($year.'-01-01 00:00:00');
-        // $dateakhir = date($year.'-12-31 23:59:59');
+        if($year != null){
+            $dateawal = date($year.'-01-01 00:00:00');
+            $dateakhir = date($year.'-12-31 23:59:59');
+        }
+        if($month != null){
+            $dateawal =  date('Y-'.$month.'-01 00:00:00');
+            $dateakhir = date('Y-'.$month.'-31 23:59:59');
+        }
+        if($day != null){
+            $dateawal = date('Y-m-d 00:00:00', strtotime($day));
+            $dateakhir = date('Y-m-d 23:59:59', strtotime($day));
+        }
 
         $saldo = 0;
         $data = DB::table('master_jurnal')
         ->where('master_akun_id','=',$id)    
         ->where('master_jurnal.cabang_id', $cabang_id)
-        ->whereYear('master_jurnal.created_at',$year)    
+        ->where('master_jurnal.created_at','>=',$dateawal)    
+        ->where('master_jurnal.created_at','<=',$dateakhir)    
         ->get();
 
         if($sifat == 'DEBIT'){

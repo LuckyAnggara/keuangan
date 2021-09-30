@@ -27,9 +27,18 @@ Route::group(['prefix' => 'dashboard-cabang'], function () {
     Route::get('/beban-harian', 'DashboardCabangController@bebanHarian');
     Route::get('/kas-harian', 'DashboardCabangController@kasHarian');
     Route::get('/utang-harian', 'DashboardCabangController@utangHarian');
-
-
+    Route::get('/persediaan-harian', 'DashboardCabangController@persediaanHarian');
     Route::get('/laba-bulanan', 'DashboardCabangController@labaBulanan');
+
+});
+
+// CABANG
+Route::group(['prefix' => 'cabang'], function () {
+    //GET
+    Route::get('/performance-all', 'CabangController@allPerformance');
+    Route::get('/performance-satuan', 'CabangController@satuanPerformance');
+    Route::get('/kas', 'CabangController@kas');
+
 });
 
 
@@ -51,7 +60,7 @@ Route::group(['prefix' => 'jurnal'], function () {
 // LEDGER
 Route::group(['prefix' => 'ledger'], function () {
     //GET
-    Route::get('/{cabang}/{id}/{dd}/{ddd}', 'LedgerController@detail');
+    Route::get('/', 'LedgerController@detail');
 });
 
 // AKUN
@@ -59,7 +68,7 @@ Route::group(['prefix' => 'akun'], function () {
     //POST
     Route::post('/store', 'AkunController@store');
     //GET
-    Route::get('/tahun/{tahun}/cabang/{cabang_id}', 'AkunController@index');
+    Route::get('/', 'AkunController@index');
     // Route::get('/ceksaldo/{id}', 'AkunController@cekSaldo');
     Route::get('/cek-saldo', 'AkunController@cekSaldoApi');
     Route::get('/{id}', 'AkunController@show');
@@ -70,9 +79,8 @@ Route::group(['prefix' => 'akun'], function () {
 // NERACA
 Route::group(['prefix' => 'neraca'], function () {
     //GET
-    Route::get('/tahun/{tahun}', 'NeracaController@index');
+    Route::get('/', 'NeracaController@index');
 });
-
 
 // LABARUGI
 Route::group(['prefix' => 'labarugi'], function () {
@@ -91,7 +99,8 @@ Route::group(['prefix' => 'beban'], function () {
     Route::delete('/delete/{id}', 'BebanController@destroy');
 });
 
-// BEBAN
+
+// KAS
 Route::group(['prefix' => 'kas'], function () {
     //GET
     // Route::get('/detail/{id}/{dd}/{ddd}', 'KasController@detail');

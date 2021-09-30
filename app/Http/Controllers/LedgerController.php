@@ -9,9 +9,15 @@ use App\Models\Jurnal;
 
 class LedgerController extends Controller
 {
-    public function detail($cabang, $id, $dd, $ddd){
-        $dateawal = date("Y-m-d 00:00:01", strtotime($dd));
+    public function detail(Request $payload){
+
+        $cabang_id = $payload->input('cabang_id');
+        $id = $payload->input('akun_id');
+        $dd = $payload->input('dd');
+        $ddd = $payload->input('ddd');
+        $dateawal = date("Y-m-d 00:00:00", strtotime($dd));
         $dateakhir = date("Y-m-d 23:59:59", strtotime($ddd));
+
 
         if($ddd == "null"){
             $dateakhir = date("Y-m-d 23:59:59", strtotime($dateawal));
@@ -28,7 +34,7 @@ class LedgerController extends Controller
 
         $komponen = DB::table('master_akun')
                     ->where('komponen','=', $master->kode_akun)
-                    ->where('cabang_id', $cabang)
+                    ->where('cabang_id', $cabang_id)
                     ->where('deleted_at')
                     ->orderBy('kode_akun','ASC')
                     ->get();
@@ -42,7 +48,7 @@ class LedgerController extends Controller
                 $ledger = DB::table('master_jurnal')
                 ->select('master_jurnal.*')
                 ->where('master_jurnal.master_akun_id','=',$value->id)    
-                ->where('master_jurnal.cabang_id','=',$cabang)       
+                ->where('master_jurnal.cabang_id','=',$cabang_id)       
                 ->where('master_jurnal.deleted_at')
                 ->whereDate('master_jurnal.created_at','>=',$dateawal)    
                 ->whereDate('master_jurnal.created_at','<=',$dateakhir)  
@@ -78,7 +84,7 @@ class LedgerController extends Controller
             $ledger = DB::table('master_jurnal')
             ->select('master_jurnal.*')
             ->where('master_jurnal.master_akun_id','=',$master->id)    
-            ->where('master_jurnal.cabang_id','=',$cabang)       
+            ->where('master_jurnal.cabang_id','=',$cabang_id)       
             ->where('master_jurnal.deleted_at')
             ->whereDate('master_jurnal.created_at','>',$dateawal)    
             ->whereDate('master_jurnal.created_at','<',$dateakhir)  

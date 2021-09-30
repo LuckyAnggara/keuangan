@@ -13,7 +13,10 @@ class AkunController extends Controller
        $output=  Akun::findOrFail($id);
        return response()->json($output, 200);
     }
-    public function index($year = null, $cabang_id){
+    public function index(Request $payload){
+        $cabang_id = $payload->input('cabang_id');
+        $year = $payload->input('tahun');
+        
         $header = DB::table('jenis_akun')
         ->select('jenis_akun.*')
    
