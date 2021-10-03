@@ -75,7 +75,8 @@ class CabangController extends Controller
                     $totalBeban -= $beban->saldo;
                 }
             }
-            
+
+            $cabang['setoran'] =  Http::get(mainApi().'setor/pelaporan?cabang_id='.$cabang['id'].'&tahun='.$year.'&bulan='.$month.'&hari='.$day)->json();
             $cabang['penjualan'] = $output['pendapatan'][0]->saldo - $output['pendapatan'][2]->saldo;
             $cabang['pendapatan_lainnya'] = $output['pendapatan'][1]->saldo;
             $cabang['hpp'] = $output['pendapatan'][4]->saldo;
@@ -155,6 +156,7 @@ class CabangController extends Controller
                     $totalBeban -= $beban->saldo;
                 }
             }
+            $cabang['setoran'] =  Http::get(mainApi().'setor/pelaporan?cabang_id='.$cabang_id.'&tahun=&bulan=&hari='.$newDate)->json();
             $cabang['tanggal'] = $newDate;
             $cabang['penjualan'] = $output['pendapatan'][0]->saldo - $output['pendapatan'][2]->saldo;
             $cabang['pendapatan_lainnya'] = $output['pendapatan'][1]->saldo;
@@ -174,7 +176,7 @@ class CabangController extends Controller
     public function kas(Request $payload){
         $cabang_id = $payload->input('cabang_id');
 
-        $master = Akun::where('komponen','=','1.1.2')->whereIn('cabang_id', array(0, $cabang_id))->get();
+        $master = Akun::whereIn('komponen',['1.1.2','1.1.3'])->whereIn('cabang_id', array(0, $cabang_id))->get();
         
         foreach ($master as $key => $sub) {   
             $kredit = Jurnal::where('master_akun_id',$sub->id)->where('cabang_id',$cabang_id)->where('jenis','KREDIT')->whereBetween('created_at', ['2021-01-01', Carbon::today()])->sum('nominal');

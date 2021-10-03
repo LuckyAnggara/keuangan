@@ -8,8 +8,8 @@
             $dateakhir = date($year.'-12-31 23:59:59');
         }
         if($month != null){
-            $dateawal =  date('2021-'.$month.'-01 00:00:00');
-            $dateakhir = date('2021-'.$month.'-31 23:59:59');
+            $dateawal =  date('Y-'.$month.'-01 00:00:00');
+            $dateakhir = date('Y-'.$month.'-31 23:59:59');
         }
         if($day != null){
             $dateawal = date('2021-m-d 00:00:00', strtotime($day));

@@ -24,7 +24,7 @@ class KasController extends Controller
                 'master_akun_id'=>$payload->kode_akun_id,
                 'nominal'=>$payload->jumlah,
                 'jenis'=> $payload->jenis == 'DEBIT' ? 'DEBIT' : 'KREDIT',
-                'keterangan'=> $payload->jenis == 'DEBIT' ? 'TARIK KAS - ' : 'SETOR KAS - '. $payload->catatan,
+                'keterangan'=> $payload->jenis == 'DEBIT' ? 'TARIK KAS - '. $payload->user['pegawai']['nama'] . '#'.$payload->catatan : 'SETOR KAS - '. $payload->user['pegawai']['nama']. '#'.$payload->catatan,
                 'user_id'=>$payload->user['id'],
                 'cabang_id'=>$payload->user['cabang_id'],
             ]);
@@ -35,7 +35,7 @@ class KasController extends Controller
                 'master_akun_id'=>$payload->lawan_akun_id['id'],
                 'nominal'=>$payload->jumlah,
                 'jenis'=> $payload->jenis == 'DEBIT' ? 'KREDIT' : 'DEBIT',
-                'keterangan'=> $payload->jenis == 'DEBIT' ? 'TARIK KAS - ' : 'SETOR KAS - '. $payload->catatan,
+                'keterangan'=> $payload->jenis == 'DEBIT' ? 'TARIK KAS - '. $payload->user['pegawai']['nama'] . '#'.$payload->catatan  : 'SETOR KAS - '. $payload->user['pegawai']['nama'] . '#'.$payload->catatan,
                 'user_id'=>$payload->user['id'],
                 'cabang_id'=>$payload->user['cabang_id'],
             ]);

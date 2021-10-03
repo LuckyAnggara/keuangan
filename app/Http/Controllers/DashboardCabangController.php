@@ -154,17 +154,25 @@ class DashboardCabangController extends Controller
     public function kasHarian(Request $payload){
         $cabang_id = $payload->input('cabang_id');
 
-        $totalKas = 0;
-        $kas = Akun::select('nama','id')->where('komponen', '1.1.2')->where('cabang_id', $cabang_id)->get();
+        $result['tunai'] = 0;
+        $result['bank'] = 0;
+        $tunai = Akun::select('nama','id')->where('komponen', '1.1.2')->where('cabang_id', $cabang_id)->get();
+        $bank = Akun::select('nama','id')->where('komponen', '1.1.3')->get();
 
-        foreach ($kas as $key => $value) {
-            $kredit = Jurnal::where('master_akun_id',$value->id)->where('cabang_id',$cabang_id)->where('jenis','KREDIT')->whereBetween('created_at', ['2021-01-01',Carbon::today()])->sum('nominal');
-            $debit = Jurnal::where('master_akun_id',$value->id)->where('cabang_id',$cabang_id)->where('jenis','DEBIT')->whereBetween('created_at', ['2021-01-01',Carbon::today()])->sum('nominal');
-            $totalKas += $debit - $kredit;
+        foreach ($tunai as $key => $tunai) {
+            $kredit = Jurnal::where('master_akun_id',$tunai->id)->where('cabang_id',$cabang_id)->where('jenis','KREDIT')->whereBetween('created_at', ['2021-01-01',Carbon::today()])->sum('nominal');
+            $debit = Jurnal::where('master_akun_id',$tunai->id)->where('cabang_id',$cabang_id)->where('jenis','DEBIT')->whereBetween('created_at', ['2021-01-01',Carbon::today()])->sum('nominal');
+            $result['tunai'] += $debit - $kredit;
+        }
+
+        foreach ($bank as $key => $bank) {
+            $kredit = Jurnal::where('master_akun_id',$bank->id)->where('cabang_id',$cabang_id)->where('jenis','KREDIT')->whereBetween('created_at', ['2021-01-01',Carbon::today()])->sum('nominal');
+            $debit = Jurnal::where('master_akun_id',$bank->id)->where('cabang_id',$cabang_id)->where('jenis','DEBIT')->whereBetween('created_at', ['2021-01-01',Carbon::today()])->sum('nominal');
+            $result['bank'] += $debit - $kredit;
         }
 
 
-        return response()->json($totalKas, 200);
+        return response()->json($result, 200);
 
 
     }
