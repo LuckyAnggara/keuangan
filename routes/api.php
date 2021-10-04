@@ -69,9 +69,10 @@ Route::group(['prefix' => 'akun'], function () {
     Route::post('/store', 'AkunController@store');
     //GET
     Route::get('/', 'AkunController@index');
-    // Route::get('/ceksaldo/{id}', 'AkunController@cekSaldo');
+    
     Route::get('/cek-saldo', 'AkunController@cekSaldoApi');
-    Route::get('/{id}', 'AkunController@show');
+    // Route::get('/{id}', 'AkunController@show');
+    Route::get('/cek-data', 'AkunController@cekPrefix');
     //DESTROY
     // Route::delete('/{id}', 'BarangController@destroy');
 });

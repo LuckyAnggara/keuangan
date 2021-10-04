@@ -176,11 +176,21 @@ class CabangController extends Controller
     public function kas(Request $payload){
         $cabang_id = $payload->input('cabang_id');
 
+        $dateawal = date('Y-01-01 00:00:00');
+        $dateakhir = date('Y-m-d 23:59:59');
+
         $master = Akun::whereIn('komponen',['1.1.2','1.1.3'])->whereIn('cabang_id', array(0, $cabang_id))->get();
         
         foreach ($master as $key => $sub) {   
-            $kredit = Jurnal::where('master_akun_id',$sub->id)->where('cabang_id',$cabang_id)->where('jenis','KREDIT')->whereBetween('created_at', ['2021-01-01', Carbon::today()])->sum('nominal');
-            $debit = Jurnal::where('master_akun_id',$sub->id)->where('cabang_id',$cabang_id)->where('jenis','DEBIT')->whereBetween('created_at', ['2021-01-01', Carbon::today()])->sum('nominal');
+            $kredit = Jurnal::where('master_akun_id',$sub->id)->where('cabang_id',$cabang_id)->where('jenis','KREDIT')
+            ->where('master_jurnal.created_at','>=',$dateawal) 
+            ->where('master_jurnal.created_at','<=',$dateakhir)
+            ->sum('nominal');
+
+            $debit = Jurnal::where('master_akun_id',$sub->id)->where('cabang_id',$cabang_id)->where('jenis','DEBIT')
+            ->where('master_jurnal.created_at','>=',$dateawal)    
+            ->where('master_jurnal.created_at','<=',$dateakhir)    
+            ->sum('nominal');
             $sub->saldo = $debit - $kredit;
         }
             

@@ -13,6 +13,7 @@ class AkunController extends Controller
        $output=  Akun::findOrFail($id);
        return response()->json($output, 200);
     }
+    
     public function index(Request $payload){
         $cabang_id = $payload->input('cabang_id');
         $year = $payload->input('tahun');
@@ -110,9 +111,18 @@ class AkunController extends Controller
     }
 
     public function store(Request $payload){
+        $data = Akun::where('komponen',$payload->komponen)->get();
+        $dd =  collect($data)->last();
+        if($dd){
+            $str = explode('-', $dd->kode_akun);
+            $last_prefix = $str[1]+ 1;
+        }else{
+            $last_prefix = 1;
+        }
+
         $akun = Akun::create([
             'jenis_akun_id' => $payload->jenis_akun_id,
-            'kode_akun' => $payload->kode_akun,
+            'kode_akun' => $payload->komponen !== null ? $payload->kode_akun.'-'.$last_prefix : $payload->kode_akun,
             'nama' => $payload->nama,
             'saldo_normal' => $payload->saldo_normal,
             'komponen' => $payload->komponen,
