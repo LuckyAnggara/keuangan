@@ -29,7 +29,16 @@ Route::group(['prefix' => 'dashboard-cabang'], function () {
     Route::get('/utang-harian', 'DashboardCabangController@utangHarian');
     Route::get('/persediaan-harian', 'DashboardCabangController@persediaanHarian');
     Route::get('/laba-bulanan', 'DashboardCabangController@labaBulanan');
+});
 
+Route::group(['prefix' => 'penutup'], function () {
+    //GET
+    Route::get('/proses', 'PenutupTahunController@proses');
+});
+
+Route::group(['prefix' => 'clear'], function () {
+    //GET
+    Route::get('/clear', 'ClearController@clear');
 });
 
 // CABANG
@@ -61,6 +70,7 @@ Route::group(['prefix' => 'jurnal'], function () {
 Route::group(['prefix' => 'ledger'], function () {
     //GET
     Route::get('/', 'LedgerController@detail');
+    Route::get('/saldo', 'LedgerController@saldo');
 });
 
 // AKUN
@@ -70,7 +80,7 @@ Route::group(['prefix' => 'akun'], function () {
     //GET
     Route::get('/', 'AkunController@index');
     
-    Route::get('/cek-saldo', 'AkunController@cekSaldoApi');
+    Route::get('/cek-saldo', 'AkunController@cekSaldoApi2');
     // Route::get('/{id}', 'AkunController@show');
     Route::get('/cek-data', 'AkunController@cekPrefix');
     //DESTROY
@@ -94,6 +104,7 @@ Route::group(['prefix' => 'beban'], function () {
     //GET
     Route::get('/operasional/cabang/{cabang}/tahun/{tahun}', 'BebanController@operasional');
     Route::get('/gaji/cabang/{cabang}/tahun/{tahun}', 'BebanController@gaji');
+    Route::get('/get-beban', 'BebanController@getBeban');
     //POST
     Route::post('/store', 'BebanController@store');
     //delete

@@ -24,6 +24,7 @@ class CabangController extends Controller
             $jenis = ['4','5']; // 4 PENDAPATAN 5 BEBAN
             $totalBeban = 0;
             $totalPendapatan = 0;
+            $totalPiutang = 0;
             $output = [];
             foreach ($jenis as $key => $jenis) {
                 $nama = 'pendapatan';
@@ -58,6 +59,7 @@ class CabangController extends Controller
                     $sub->saldo = $headerSaldo + $subsaldo;
                 }
                 $output[$nama] = $dd;
+                // PIUTANG
             }
             
             foreach ($output['pendapatan'] as $key => $pendapatan) {
@@ -75,15 +77,16 @@ class CabangController extends Controller
                     $totalBeban -= $beban->saldo;
                 }
             }
-
+            
             $cabang['setoran'] =  Http::get(mainApi().'setor/pelaporan?cabang_id='.$cabang['id'].'&tahun='.$year.'&bulan='.$month.'&hari='.$day)->json();
             $cabang['penjualan'] = $output['pendapatan'][0]->saldo - $output['pendapatan'][2]->saldo;
             $cabang['pendapatan_lainnya'] = $output['pendapatan'][1]->saldo;
             $cabang['hpp'] = $output['pendapatan'][4]->saldo;
             $cabang['total_pendapatan'] = $totalPendapatan;
+            $cabang['total_piutang'] =   $this->itungPiutang('1.1.4', $cabang['id'],$year, $month,$day );
             $cabang['total_beban'] =  $totalBeban;
             $cabang['laba_rugi'] = $totalPendapatan - $totalBeban;
-            $cabang['gross_margin'] = $output['pendapatan'][0]->saldo == 0 ? 0 : round((($output['pendapatan'][0]->saldo - $output['pendapatan'][4]->saldo) / $output['pendapatan'][0]->saldo) * 100, 2);
+            $cabang['gross_margin'] = $cabang['penjualan'] == 0 ? 0 : round((($cabang['penjualan'] - $output['pendapatan'][4]->saldo) / $cabang['penjualan']) * 100, 2);
 
             $result[]= $cabang;
         }
@@ -195,5 +198,20 @@ class CabangController extends Controller
         }
             
         return response()->json($master, 200);
+    }
+
+    public function itungPiutang($komponen, $cabang_id, $year, $month, $day){
+            $headerSaldo = 0;
+            $komponen = Akun::where('deleted_at')
+                ->where('komponen', $komponen)
+                ->whereIn('cabang_id', array(0, $cabang_id))
+                ->get();
+
+                foreach ($komponen as $key => $value) {
+                    $saldo = cekSaldo($value->id,$value->saldo_normal, $cabang_id,$year, $month,$day);
+                    $value->saldo = $saldo;
+                    $headerSaldo += $saldo;
+                }
+             return $headerSaldo;
     }
 }

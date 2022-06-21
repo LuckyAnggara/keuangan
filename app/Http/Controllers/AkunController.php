@@ -229,10 +229,21 @@ class AkunController extends Controller
         }else{
             return $saldo;
         }
-// return $bb;
-        
-
         return response()->json($saldo, 200);
     }
+
+    function cekSaldoApi2(Request $payload){
+        $id = $payload->input('akun_id');
+        $cabang_id = $payload->input('cabang_id');
+        $year = $payload->input('tahun');
+        $month = $payload->input('bulan');
+        $day = $payload->input('hari');
+
+        $master = Akun::find($id);
+        
+        $saldo = cekSaldo($id,$master->saldo_normal, $cabang_id,$year, $month, $day);
+        return $saldo;
+    }
+
 
 }

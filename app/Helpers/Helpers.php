@@ -1,6 +1,8 @@
 <?php 
     use Illuminate\Support\Facades\DB;  
 
+   
+
     function cekSaldo($id, $sifat, $cabang_id, $year=null, $month=null, $day=null){
         
         if($year != null){
@@ -12,7 +14,8 @@
             $dateakhir = date('Y-'.$month.'-31 23:59:59');
         }
         if($day != null){
-            $dateawal = date('2021-m-d 00:00:00', strtotime($day));
+            $dateawal = date('Y-m-d 00:00:00', strtotime($day));
+            // $dateawal = date('Y-01-01 00:00:00', strtotime($day));
             $dateakhir = date('Y-m-d 23:59:59', strtotime($day));
         }
 

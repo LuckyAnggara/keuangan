@@ -105,7 +105,7 @@ class BebanController extends Controller
             $nomorJurnal = $prefix.$nomorJurnal; // DATA DITAMBAH 1
 
             $nomor_akun[] = (object) array('master_akun_id' => $payload->master_akun_id, 'jenis' => 'DEBIT');
-            $nomor_akun[] = (object) array('master_akun_id' => $payload->kas['kode_akun_id'], 'jenis' => 'KREDIT');
+            $nomor_akun[] = (object) array('master_akun_id' => $payload->kas['id'], 'jenis' => 'KREDIT');
 
             foreach ($nomor_akun as $key => $value) {
                 $jurnal = Jurnal::create([
@@ -151,5 +151,33 @@ class BebanController extends Controller
         $output = $master;
 
         return response()->json($output, 200);
+    }
+
+    public function getBeban(Request $payload){
+        $cabang_id = $payload->input('cabang_id');
+        $year = $payload->input('tahun');
+        $month = $payload->input('bulan');
+        $day = $payload->input('hari');
+
+        if($year != null){
+            $dateawal = date($year.'-01-01 00:00:00');
+            $dateakhir = date($year.'-12-31 23:59:59');
+        }
+        if($month != null){
+            $dateawal =  date('Y-'.$month.'-01 00:00:00');
+            $dateakhir = date('Y-'.$month.'-31 23:59:59');
+        }
+        if($day != null){
+            $dateawal = date('Y-m-d 00:00:00', strtotime($day));
+            $dateakhir = date('Y-m-d 23:59:59', strtotime($day));
+        }
+
+        $master = Beban::where('cabang_id', $cabang_id)
+        ->where('created_at','>=',$dateawal)    
+        ->where('created_at','<=',$dateakhir) 
+        ->get();
+
+        return response()->json($master, 200);
+
     }
 }

@@ -142,18 +142,29 @@ class NeracaController extends Controller
 
     function cekSaldo($id, $sifat, $cabang_id, $year=null, $month=null, $day=null){
         
+        
         if($year != null){
-            $dateawal = date($year.'-01-01 00:00:00');
-            $dateakhir = date($year.'-12-31 23:59:59');
+            if($month !=null){
+                        $dateawal =  date($year.'-'.$month.'-01 00:00:00');
+                        $dateakhir = date($year.'-'.$month.'-31 23:59:59');
+               
+            }else{
+
+                $dateawal = date($year.'-01-01 00:00:00');
+                $dateakhir = date($year.'-12-31 23:59:59');
+
+                if($month != null){
+                    $dateawal =  date('Y-'.$month.'-01 00:00:00');
+                    $dateakhir = date('Y-'.$month.'-31 23:59:59');
+                }
+                if($day != null){
+                    $dateawal = date('Y-m-d 00:00:00', strtotime($day));
+                    $dateakhir = date('Y-m-d 23:59:59', strtotime($day));
+                }
+            }
+
         }
-        if($month != null){
-            $dateawal =  date('Y-'.$month.'-01 00:00:00');
-            $dateakhir = date('Y-'.$month.'-31 23:59:59');
-        }
-        if($day != null){
-            $dateawal = date('Y-m-d 00:00:00', strtotime($day));
-            $dateakhir = date('Y-m-d 23:59:59', strtotime($day));
-        }
+        
 
         $saldo = 0;
         $data = DB::table('master_jurnal')
@@ -193,7 +204,7 @@ class NeracaController extends Controller
         $saldo = 0;
         $data = DB::table('master_jurnal')
         ->where('master_akun_id','=',$id)    
-        ->where('master_jurnal.deleted_at')
+        ->where('master_jurnal.deleted_tt')
         ->where('master_jurnal.created_at','>',$dateawal)    
         ->where('master_jurnal.created_at','<',$dateakhir)  
         ->get();

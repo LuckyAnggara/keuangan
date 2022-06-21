@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Akun;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
@@ -34,8 +35,7 @@ class LedgerController extends Controller
 
         $komponen = DB::table('master_akun')
                     ->where('komponen','=', $master->kode_akun)
-                    ->where('cabang_id', $cabang_id)
-                    ->where('deleted_at')
+                    ->whereIn('cabang_id', array(0, $cabang_id))
                     ->orderBy('kode_akun','ASC')
                     ->get();
 
@@ -122,5 +122,16 @@ class LedgerController extends Controller
         $output->saldo = $headerSaldo;
 
         return response()->json($output, 200);  
+    }
+
+    public function saldo(Request $payload){
+        $cabang_id = $payload->input('cabang_id');
+        $akun_id = $payload->input('akun_id');
+        $tahun = $payload->input('tahun');
+
+        $akun = Akun::find($akun_id);
+        $saldo = cekSaldo($akun->id,$akun->saldo_normal, $cabang_id,$tahun,null,null);
+
+        return response()->json($saldo, 200);
     }
 }

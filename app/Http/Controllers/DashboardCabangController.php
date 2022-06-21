@@ -153,30 +153,56 @@ class DashboardCabangController extends Controller
     }
     public function kasHarian(Request $payload){
         $cabang_id = $payload->input('cabang_id');
+        $akun_id = $payload->input('akun_id');
+
         $dateawal = date('Y-01-01 00:00:00');
         $dateakhir = date('Y-m-d 23:59:59');
 
         $result['tunai'] = 0;
         $result['bank'] = 0;
-        $tunai = Akun::select('nama','id')->where('komponen', '1.1.2')->where('cabang_id', $cabang_id)->get();
-        $bank = Akun::select('nama','id')->where('komponen', '1.1.3')->get();
 
-        foreach ($tunai as $key => $tunai) {
-            $kredit = Jurnal::where('master_akun_id',$tunai->id)->where('cabang_id',$cabang_id)->where('jenis','KREDIT')
+        if($akun_id === ''){
+
+            $tunai = Akun::select('nama','id')->where('komponen', '1.1.2')->where('cabang_id', $cabang_id)->get();
+            $bank = Akun::select('nama','id')->where('komponen', '1.1.3')->get();
+
+        
+            foreach ($tunai as $key => $tunai) {
+                $kredit = 0;
+                $debit = 0;
+
+                    $kredit = Jurnal::where('master_akun_id',$tunai->id)->where('cabang_id',$cabang_id)->where('jenis','KREDIT')
+                    ->where('master_jurnal.created_at','>=',$dateawal) 
+                    ->where('master_jurnal.created_at','<=',$dateakhir)
+                    ->sum('nominal');
+                    $debit = Jurnal::where('master_akun_id',$tunai->id)->where('cabang_id',$cabang_id)->where('jenis','DEBIT')
+                    ->where('master_jurnal.created_at','>=',$dateawal) 
+                    ->where('master_jurnal.created_at','<=',$dateakhir)
+                    ->sum('nominal');
+
+                $result['tunai'] += $debit - $kredit;
+            }
+
+            foreach ($bank as $key => $bank) {
+                $kredit = 0;
+                $debit = 0;
+                
+                $kredit = Jurnal::where('master_akun_id',$bank->id)->where('cabang_id',$cabang_id)->where('jenis','KREDIT')->whereBetween('created_at', ['2021-01-01',Carbon::today()])->sum('nominal');
+                $debit = Jurnal::where('master_akun_id',$bank->id)->where('cabang_id',$cabang_id)->where('jenis','DEBIT')->whereBetween('created_at', ['2021-01-01',Carbon::today()])->sum('nominal');
+                $result['bank'] += $debit - $kredit;
+            }
+        }else{
+            $kredit = Jurnal::where('master_akun_id',$akun_id)->where('cabang_id',$cabang_id)->where('jenis','KREDIT')
             ->where('master_jurnal.created_at','>=',$dateawal) 
             ->where('master_jurnal.created_at','<=',$dateakhir)
             ->sum('nominal');
-            $debit = Jurnal::where('master_akun_id',$tunai->id)->where('cabang_id',$cabang_id)->where('jenis','DEBIT')
+            $debit = Jurnal::where('master_akun_id',$akun_id)->where('cabang_id',$cabang_id)->where('jenis','DEBIT')
             ->where('master_jurnal.created_at','>=',$dateawal) 
             ->where('master_jurnal.created_at','<=',$dateakhir)
             ->sum('nominal');
+
             $result['tunai'] += $debit - $kredit;
-        }
 
-        foreach ($bank as $key => $bank) {
-            $kredit = Jurnal::where('master_akun_id',$bank->id)->where('cabang_id',$cabang_id)->where('jenis','KREDIT')->whereBetween('created_at', ['2021-01-01',Carbon::today()])->sum('nominal');
-            $debit = Jurnal::where('master_akun_id',$bank->id)->where('cabang_id',$cabang_id)->where('jenis','DEBIT')->whereBetween('created_at', ['2021-01-01',Carbon::today()])->sum('nominal');
-            $result['bank'] += $debit - $kredit;
         }
 
 
